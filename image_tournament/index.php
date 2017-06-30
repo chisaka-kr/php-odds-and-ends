@@ -8,31 +8,83 @@
   <meta name="Description" content="">
   <title>Tournament</title>
   <style>
-    #image {
-      max-width:45%;
-	  max-height:80%;
-	  margin:10px;
+	html,body {
+	  height: 100%;
+	  margin: 0;
+	  padding:0;
+	}
+    .image_container {
+	  position:relative;
+	  width:100%;
+	  height:90%;
+	  line-height:90%;
+	  text-align:center;
+	  overflow:hidden;
     }
-	#image:hover {
-	  border-style:dashed;
-	  border-width:3px;
-	  border-color:#CAA;
+    .image {
+      position: relative;
+	  -webkit-animation: image-vanish 5s;
+	  width:auto;
+      max-width:45%;
+	  height:auto;
+	  max-height:100%;
+  	  float:left;
+
+	  margin-left:auto;
+	  margin-right:auto;
+	  opacity:0.8
+
+    }
+	.image:hover {
+	  opacity:1;
 	}
 	#content {
-	  
+	  height:100%;
+	}
+	#status:hover {
+	  opacity:1;
+	}
+	#status {
+	-webkit-animation: status-vanish 3s;
+	position: fixed;
+	top:0;
+	min-height:30px;
+	font-size:15pt;
+	height:auto;
+	width: 100%;
+	overflow: hidden;
+	z-index:5;
+	background-color:#EEE;
+	opacity:0;
+	}	
+	@-webkit-keyframes status-vanish {
+		0% { opacity:0.8; }
+		50% { opacity:0.8; }
+		100% { opacity:0;}
+	}
+	@-webkit-keyframes image-vanish {
+		0% { opacity:1; }
+		90% { opacity:1; }
+		100% { opacity:0.8;}
 	}
   </style>
 <body>
+<div id="status">
 <?php
 
 $image_dir = "./image_files";
 
 $command = $_GET['c'];
 $sel = $_GET['s'];
+$sel2 = $_GET['s2'];
 $cnt = $_GET['cnt']; 
 if(!$_GET['cnt']) { $cnt = 0; }
 
 session_start();
+?>
+<a href="?c=init">초기화</a>
+
+<?php
 
 if ($command == 'init') {
 	
@@ -52,14 +104,12 @@ if ($command == 'init') {
 	$_SESSION['files'] = $files;
 	$_SESSION['max'] = count($files);
 	$_SESSION['pass'] = 0;
-	echo "<h1>이미지 개수: ".count($files)."</h1>";
+	echo "이미지 개수: ".count($files)."개 / ";
 
 }
 
-
 if($_SESSION['files'] != null) {
 
-	echo "<div id='content'>";
 	//세션에서 값 가져오기
 	$files = $_SESSION['files'];
 	$image_dir = $_SESSION['image_dir'];
@@ -69,9 +119,12 @@ if($_SESSION['files'] != null) {
 	//골라지지 않은 것 삭제..
 	if ($_SESSION['pass'] != 1) {
 		foreach ($files as $f => $val) {
-			
 			if ($sel == $val) {
-				echo "<h2>OK</h2>";
+				echo "OK.";
+				unset($files[$f]);
+			}
+			if ($sel2 == $val) {
+				echo " 2 images removed. ";
 				unset($files[$f]);
 			}
 		}
@@ -97,16 +150,21 @@ if($_SESSION['files'] != null) {
 	}
 	//배열 하나 남았을 때
 	if(count($files) <= 1) {
-		echo "<h1>Champion</h1>";
-		echo "<img src='$image_dir/".$files[0]."'  style='width:50%;float: left;'></a>\n";
+		echo "</div>";
+		echo "<div class='image_container'>";
+		echo "<h1>Winner</h1>";
+		echo "<img src='$image_dir/".$files[0]."'></a>\n";
+		echo "</div>";
 	}
 	else {
 		$for_count = 0;
 		$file_name = array();
 		if ($cnt == 0) {
-			echo "<h1>".count($files)."강</h1>";
+			echo count($files)."강";
 		}
-		echo "<h3>image count:".$cnt."</h3>";
+		echo "($cnt/".count($files).")";
+	echo "</div>";
+	echo "<div id='content'>";
 		for($i=$cnt;$i<=count($files);$i++) {
 			if(!$files[$i]) { continue; }
 			$file_name[] = $files[$i];
@@ -117,22 +175,26 @@ if($_SESSION['files'] != null) {
 		if($for_count == 1 ) { 
 			$_SESSION['pass'] = 1;
 			echo "<h1>라운드 종료. (아래 그림은 부전승 처리)</h1>";
+			echo "<div class=image_container>";
 			echo "<a href='?s=".$file_name[0]."&cnt=$cnt'><img src='$image_dir/".$file_name[0]."' id='image'></a>\n";
+			echo "</div>";
 		}
 		else {	
-			echo "<a href='?s=".$file_name[1]."&cnt=$cnt'><img src='$image_dir/".$file_name[0]."' id='image'></a>\n";
-			echo "<a href='?s=".$file_name[0]."&cnt=$cnt'><img src='$image_dir/".$file_name[1]."' id='image'></a>\n";
+			echo "<div class='image_container'>";
+			echo "<a href='?s=".$file_name[1]."&cnt=$cnt'><img src=$image_dir/".$file_name[0]." class='image'></a>\n";
+			echo "<a href='?s=".$file_name[0]."&cnt=$cnt'><img src=$image_dir/".$file_name[1]." class='image'></a>\n";
+			echo "</div>";
+			if(count($files)>2) {
+			echo "<a href='?s=".$file_name[0]."&s2=".$file_name[1]."'>둘 다 제거</a>";
+			}
 		}
-		echo "<br />";
+		
 	}
 	$_SESSION['files'] = $files;
 	echo "</div>";
 }
 
 ?>
-<div id='footer'>
-<hr>
-<a href="?c=init">초기화</a>
 </div>
 </body>
 </html>
